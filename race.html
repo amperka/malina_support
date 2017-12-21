@@ -1,0 +1,171 @@
+﻿<!DOCTYPE html><html><head><link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon"><meta name="viewport" content="width=device-width, initial-scale=1"><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><title>Браузерный Dendy</title>
+<style>
+.bg {background-repeat: repeat-x;background: #006797;position: relative;background: linear-gradient(to top, #00A1AA, #006797); width: 700px;margin: 0 auto;height: 400px;}
+.status {width: 100%; height: 50px; font-size: 25px; line-height: 50px;}
+.ico {width: 40px; height: 40px; top: 30px; background-size:40px;}
+a { text-decoration: none; }
+.points {float: left; width: 33%; text-align: center}
+.gameStatus {width: 96%; margin: 2%; font-size: 20px; line-height: 50px; color: #FFF;}
+#alert {top: 100px; text-align: center; font-size: 20px; color: #FFF; visibility: hidden; margin-left: auto; margin-right: auto; width: 300px;  left: 0; right: 0; }
+.abs {position: absolute;}
+#passedDistance, #batteryCount, #jumpsCount {display: inline;}
+#e {top: 100px;}
+#wall {display: none}
+#city {width: 100%; height: 100%; background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAH0AQMAAADll2ycAAAABlBMVEUAAAAtLS3wB2rmAAAAAXRSTlMAQObYZgAAAXtJREFUeNrtzE1q2wAUhdEKDzzUEroUb6xQQRfQLXXWYbfgJbhkooCqWyUiEdjOjyI5lu3zjS7vwfkiSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkzdAqzeFxnRoMXjpctK/CRX5fM1ykOQIn2wuAi/w6K/y9AoOfntXlw+t2DLyq54FXuT8t3KHgZcOp+kv9EfhnMwFe58ceXNQXCH+tzw1vkuYQznYcXDaj4U19fXD7DK+Tajyc+vrgMsnuJuCu+0e4bCfCm9yNgLOdB07yJpzti3CySdvB3To9nOzDZTUVTsbD/RrgzAJntzw4D/96gFeZGe7Gn+Pwtye4Yz8HTvbh/HsTTjIZTjo4OQ7f1S/BmRseuL5JcN/f98JDA5ycHh6aCmcBcM4IH1ZmtyT4uZuA+24JDhj8mXB2YDAYDAaDwWAwGAwGg8FgMBgMBoPBYDAYDA4YDAaDwWAwGBwwGAwGg8FgMDhgMBgMBoPBYHDAYDD4Vfg/srb3zxhlKuoAAAAASUVORK5CYII=');}
+</style>
+<script>
+var jumpDelta = 5;
+var speed = 5;
+var gameID = undefined;
+var nyan = {x: 20, y: 0, img: new Image()};
+var press = false;
+var up = true;
+var context;
+var makeNewBat = false, makeNewWall = false;
+var batExists = false, wallExists = false;
+var flat = new Image();
+var distance = 0;
+var jumps = 0;
+var deltaY = 155;
+var canvas;
+var passedDistance = 0;
+var passedDistanceView;
+var batteryCount = 0;
+var batteryCountView;
+var jumpsCountView;
+var bat = {x: 0, y: 0, img: new Image()};
+var wall = {x: 0, y: 76, count: 0, img: new Image()};
+var city;
+
+document.addEventListener('keydown', function(ev){ press = true; });
+
+var e = new KeyboardEvent('keydown',{'keyCode':32,'which':32});
+document.dispatchEvent(e);
+
+function loadSVG(id) {
+	var svg = document.getElementById(id);
+	return 'data:image/svg+xml;base64,' + btoa(new XMLSerializer().serializeToString(svg));
+}
+window.onload = function () {
+	passedDistanceView = document.getElementById('passedDistance');
+	batteryCountView = document.getElementById('batteryCount');
+	jumpsCountView = document.getElementById('jumpsCount');
+	city = document.getElementById('city');
+	canvas = document.getElementById("e");
+	context = canvas.getContext("2d");
+	nyan.img.onload = function() { run(); };
+	wall.img.src = loadSVG('wall');
+	bat.img.src = loadSVG('bat');
+	flat.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAaMAAAA2BAMAAACYZ+uDAAAAJ1BMVEUAAADP0NCztLXt7e9iYmHx8fGwsbKcnJ3Jysq+wMG7vLzDxMWlpaZHjwpSAAAAAXRSTlMAQObYZgAAAVBJREFUaN7t2K1OxEAQwPE+AnMJHwFDVwABxCW8wAleANEHADEBHJgxGBAIHAYPgmDhETD3WrfXq+g1+5F2e8nMZv5im5W/NJnutrjMrZmSBKQkCc2Ki9yaKklASpLQtLCZfDq0HCVxL2MS5NOWkgSkJAkpSUJKkhB/0ge+t5Zog0lv6OkHxg7xtrXEcpImxmafxlZ2t00H6O0XRg7xurVEGk56QW8nECud9GVcfYLNTTqnp9owp/+yu236xrNncLT3h/fQVFXb1VXa4iHtG2enftIxUW0geiy72ya8sSKn6Qg3T5oYd2mkO+98Ekvyjp5XsSTv6NlBGC9uJEZvCXaJ6ifRQ3erJCWxJzEaDyGS0CEeIgn91IZIQg9EIRKPY+uoJB6Xi8BJvD+JyRUwcF/qS0q+qKeTYg0hpaeknn+IJJDWUtIqJTFMSRJSkoSWpAWpKD5n8XokLgAAAABJRU5ErkJggg==';
+	nyan.img.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFkAAABZCAMAAABi1XidAAAAdVBMVEUAAABISEdISEdISEdISEdISEdISEfJyspISEdISEdISEdISEdISEdISEdISEdISEfOz8+lpqaOjo5ISEeWl5eCg4OgoaGam5pfYF////+Pj49OTk2RkZHLzMxlZWWIiYl9fX1xcnFZWVlUVFN3d3dra2tNTk0RIwU8AAAAEHRSTlMAEPDg0GCAELBQoMCQMCBApDpM/QAAAqpJREFUWMPs08sKwjAQRuHZdZvUbvr+L2pEyoHRMUlniink7EZ+P4oX+dpaSjoR55itzj1mq5vja8aZ5niOzTHv+VG3jF/rrJzqnZNTS3+WCbmpEeXtSJ0eGelRKpY+SZpoZKTDUiewSZsyUrHUCVwtk5b3HZlT3g0qf3waftn+Bh1y7VfnlO1/ilO2G1/m9WA5022e2UiiaeCLaOlpUbQfXl/lloRaXeBVlxIt4TB0J7xVYejoJ6ZwmHrgUPlZe53tOAoDURhmjSBLt8onLAK6E7LM+z/iNDDoaOwicRT6v7Y+WValRMI0izF0rW9ryh/bCOzPrVxL3vxzaZ9XkcMd3L7L9+VDPGstwC7lu/Ihmu5YVPJTVdSkPeVQh8NkdEd2qqln2lNOdDkD0BbyX2dM9X4y9hqcD/BRrApMGT8Zn8pbRAAI2/TVU46VQQZwFqUbxno/Gal25VrULtOlxSMol04BVKLWYKzw+L+p7ekEuMtC9TTmFuxJhwCaJfmEsdKC/ej04UO2GDoRfhrlPdAvy3cM9RYsal8WvQOvtDDTHB3CizTliJOhdJw2NWXCCzRlAMLKxnSlNafgCcJ6D+TOGNOtJrfCzFDpyN1Ksjiy+aXX4CJ6Kg/pctmZprRkM+clk465m5UqwDAfmfSOu0zpNMDMR5aZ3nDVKfWu/PUYppxzOJSuxnjS/O3PdMhd5tbAkUnrMOUg48Zxujvy04Ryvrz6K7wsC+Vx7i66XL8gE6acArhp8BmvykJ5vjQKbTersllMxJY/odHH9n052MP9TCqAF2VR5CAZkLqhW31jHTlMMNrzl/nsIvKXxZJJa0UHb1ksmXQGtyQM/GS6lFke2RfeBIEip+45EU1m4SYC2PYjUGXrXPRzblFm+TbBUJylYRDosntOl/8CrgmDgG9PuaoAAAAASUVORK5CYII=';
+}
+function jumper() {
+	if (press) {
+		if (up) {
+			nyan.y -= jumpDelta;
+			if (nyan.y < -100) up = false;
+		} else {
+			nyan.y += jumpDelta;
+			if (nyan.y > 0) {
+				++jumps;
+				jumpsCountView.innerHTML = jumps;
+				press = false;
+				up = true;
+				makeNewBat = true;
+			}
+		}
+	}
+	return nyan.y;
+}
+function batteryHandler() {
+	if (makeNewBat && !batExists) {
+		makeNewBat = false;
+		batExists = true;
+		bat.x = 700 + Math.random() * 100;
+		bat.y = 34 - Math.random() * 160;
+	}
+	if (batExists) {
+		bat.x -= speed;
+		context.drawImage(bat.img, bat.x, deltaY+bat.y);
+		if ((bat.x < nyan.x + 89) && (bat.x + 22 > nyan.x)) {
+			if ((bat.y < nyan.y + 89) && (bat.y + 38 > nyan.y)) {
+				batExists = false;
+				batteryCount += 1;
+				batteryCountView.innerHTML = batteryCount;
+			}
+		}
+		if (bat.x < -50) batExists = false;
+	}
+}
+function wallHandler() {
+	if (makeNewWall && !wallExists) {
+		makeNewWall = false;
+		wallExists = true;
+		wall.x = 700 + Math.random() * 100;
+		wall.count = 1 + Math.floor(Math.random() * 3);
+	}
+	if (wallExists) {
+		wall.x -= speed;
+		for (var i = 0; i < wall.count; ++i) {
+			context.drawImage(wall.img, wall.x, deltaY+wall.y - i * 20);
+		}
+		if ((wall.x < nyan.x + 75) && (wall.x + 0 > nyan.x)) {
+			if ((wall.y - (wall.count - 1) * 20 < nyan.y + 80)) {
+				wallExists = false;
+				gameIsOver();
+			}
+		}
+		if (wall.x < -50) wallExists = false;
+	}
+}
+function gameIsOver() {
+	if (gameID) {
+		gameID = clearInterval(gameID);
+		alert = document.getElementById('alert');
+		alert.style.visibility = "visible";
+		setTimeout(function() {
+			jumpsCountView.innerHTML = jumps = 0;
+			passedDistanceView.innerHTML = passedDistance = 0;
+			batteryCountView.innerHTML = batteryCount = 0;
+			run();
+			alert.style.visibility = "hidden";
+		}, 3000);
+	}
+}
+function run(){
+gameID = setInterval(()=>{
+	context.clearRect(0, 0, canvas.width, canvas.height);	
+	for (i = 0, distance += speed; i < 3; i++) {
+		context.drawImage(flat, -distance + 419*i, 246);
+	}
+	passedDistance += speed;
+	city.style.backgroundPosition = -passedDistance * 0.1 + 'px';
+	if (passedDistance % 700 < speed) {
+		makeNewBat = true;
+		makeNewWall = true;
+	}
+	passedDistanceView.innerHTML = (passedDistance / 100).toFixed(0) * 10;
+	batteryHandler();
+	wallHandler();
+	if (distance % 419 < speed) {
+		distance = 0;
+	}
+	context.drawImage(nyan.img, nyan.x, deltaY+jumper());
+}, 20);
+}
+</script>
+</head>
+<body style="font-family:'Trebuchet MS', Helvetica, sans-serif;">
+	<div class="bg">
+		<div class="abs" id="city">&nbsp;</div>
+		<div class="abs gameStatus">
+			<div class="points"><div id="passedDistance">0</div> см</div>
+			<div class="points"><svg width="20" style="display: none" viewBox="0 0 101 180" id="bat"><style>.a{fill:none;stroke-linejoin:round;stroke-width:10;stroke:#797979;}</style><path d="M69 30l-37 0c-4 0-7-3-7-7l0-17c0-4 3-7 7-7l37 0c4 0 7 3 7 7l0 17c0 4-3 7-7 7z" fill="#CFCFCF"/><path d="M87 180l-72 0c-8 0-15-7-15-15l0-133c0-8 7-15 15-15l72 0c8 0 15 7 15 15l0 133c0 8-7 15-15 15z" fill="#F0F0F0"/><path d="M81 28l-61 0c-6 0-10 4-10 10l0 122c0 6 4 10 10 10l61 0c6 0 10-4 10-10l0-122c0-6-4-10-10-10z" fill="#F69734"/><line x1="33" y1="68" x2="73" y2="68" class="a"/><line x1="53" y1="88" x2="53" y2="48" class="a"/></svg>ватт: <div id="batteryCount">0</div></div>
+			<div class="points">прыжков: <div id="jumpsCount">0</div></div>
+		</div>
+		<div class="abs" id="alert">Уппс…<br>Не врезайся в стены!</div>
+		<svg id="wall" class="abs wall" width="20px" height="20px" viewBox="0 0 1 1"><style>.str0 {stroke:#F1F1F1;stroke-width:0.3;stroke-linejoin:round; fill:#CFD0D0}</style><rect class="str0" width="1" height="1"/></svg>
+		<canvas class="abs" id="e" width="700" height="350"></canvas>
+	</div>
+</body>
+</html>
