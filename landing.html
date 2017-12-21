@@ -1,0 +1,37 @@
+<!doctype html>
+<html>
+	<head>
+		<title>Landing page</title>
+		<meta charset="utf-8" />
+		<style>
+		.head {
+			width: 50%;
+			margin: 0 auto;
+			text-align: center;
+		}
+		.content {
+			margin: 0 auto;
+			text-align: center;
+		}
+		.content:empty:after {
+			line-height: 100px;
+			font-size: 40px;
+			content: "Здесь будет сайт";
+		}
+		iframe {
+			width: 710px;
+			height: 460px;
+			border: 0;
+		}
+		</style>
+	</head>
+	<body>
+		<div class="head">
+			<h1>Landing page</h1>
+			<img src="path/to/file" style="height: 100px;" alt="пропала картинка :-(">
+			<br>
+			Сделано на Raspberry Pi
+		</div>
+		<div class="content"><!--<iframe src="https://igrztv.github.io/malina_support/race.html"></iframe>--></div>
+	</body>
+</html>
