@@ -1,0 +1,93 @@
+<!doctype html>
+<html>
+	<head>
+		<title>Интернет свет</title>
+		<meta charset="utf-8" />
+		<style>
+		.head {
+			width: 50%;
+			margin: 0 auto;
+			text-align: center;
+		}
+		.content {
+			width: 50%;
+			margin: 10% auto;
+			text-align: center;
+			font-size: 40px;
+		}
+		.button {
+			margin: 20px;
+			width: 200px;
+			height: 100px;
+			border: solid 5px;
+			border-radius: 30px;
+			line-height: 40px;
+			font-size: 25px;
+			text-align: center;
+		}
+		#output {
+			text-align: center;
+			font-size: 20px;
+			color: #AAA;
+		}
+		</style>
+		<script>
+		var button;
+		var output;
+		var on = true;
+		window.onload = function () {
+			button = document.getElementById('button');
+			output = document.getElementById('output');
+			button.style.backgroundColor = '#CFD0D0';
+			button.style.borderColor = '#F1F1F1';
+			output.innerHTML = '&nbsp;';	
+		}
+		var send = function(){
+			var xhr = new XMLHttpRequest();
+			
+			output.innerHTML = 'Выполняю…';
+			
+			if (on === true) {
+				xhr.open('GET', 'turnOn', true);
+			} else {
+				xhr.open('GET', 'turnOff', true);
+			}
+			
+			xhr.onreadystatechange = function() {
+				console.log(xhr.readyState, xhr.response);
+				if (xhr.readyState === 4) {
+					if (xhr.response === '') {
+						output.innerHTML = 'Нет связи с сервером';
+					} else {
+						output.innerHTML = '&nbsp;';					
+						if (on === true) {
+							button.innerHTML = 'Выключить';
+							button.style.backgroundColor = '#FF0';
+							button.style.borderColor = '#CC0';
+						} else {
+							button.innerHTML = 'Включить';
+							button.style.backgroundColor = '#CFD0D0';
+							button.style.borderColor = '#F1F1F1';
+						}
+						on = !on;
+					}
+				}
+			}
+
+			xhr.send();
+		}
+		</script>
+	</head>
+	<body>
+		<div class="head">
+			<h1>Интернет свет</h1>
+			<img src="/images/logo.png" alt="); пропала картинка">
+			<br>
+			Сделано на Raspberry Pi
+		</div>
+		<div class="content">
+			<button class="button" onclick="send()" id="button">Включить</button>
+			<div id="output">Загружаю страницу…</div>
+		</div>
+	</body>
+</html>
