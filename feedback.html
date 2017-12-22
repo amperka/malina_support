@@ -1,0 +1,242 @@
+<!doctype html>
+	<head>
+		<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+		<link rel="icon" type="image/png" href="/images/favicon.png" />
+		<title>Sockets</title>
+		<style>
+		.head {
+			width: 50%;
+			margin: 0 auto;
+			text-align: center;
+		}
+		.content {
+			margin: 0 auto;
+		}
+		.cloud {
+			width: 889px;
+			height: 519px;
+			margin: 0 auto;
+			position: relative;
+			background-image: url('/images/contour.png');
+			background-repeat: no-repeat;
+			background-position: 50% 100%;
+		}
+		.drop {
+			width: 28px;
+			height: 28px;
+			border: 2px solid;
+			border-radius: 16px;
+			background-color: #DDF;
+			position: absolute;
+		}
+		.activeDrop {
+			background-color: #33F;
+		}
+		#output {
+			width: 350px;
+			text-align: center;
+			font-size: 30px;
+			color: #555;
+			margin: 0 auto;
+		}
+		.light {
+			width: 24px;
+			height: 83px;
+			background-color: #FC9;
+			position: absolute;
+		}
+		.activeLight {
+			background-color: #DA0;
+		}
+		.button {
+			width: 35px;
+			height: 20px;
+			background-color: #DDD;
+			position: absolute;
+			border: 3px solid;
+			border-radius: 9px;
+			border-color: #BBB;
+		}
+		.activeButton {
+			background-color: #888;
+			border-color: #555;
+		}
+		#button2 {
+			-webkit-transform: rotate(90deg);
+			-moz-transform: rotate(90deg);
+			-ms-transform: rotate(90deg);
+			-o-transform: rotate(90deg);
+			transform: rotate(90deg);
+		}
+		#button3 {
+			-webkit-transform: rotate(54deg);
+			-moz-transform: rotate(54deg);
+			-ms-transform: rotate(54deg);
+			-o-transform: rotate(54deg);
+			transform: rotate(54deg);
+		}
+		#button4 {
+			-webkit-transform: rotate(18deg);
+			-moz-transform: rotate(18deg);
+			-ms-transform: rotate(18deg);
+			-o-transform: rotate(18deg);
+			transform: rotate(18deg);
+		}
+		#button8 {
+			-webkit-transform: rotate(341deg);
+			-moz-transform: rotate(341deg);
+			-ms-transform: rotate(341deg);
+			-o-transform: rotate(341deg);
+			transform: rotate(341deg);
+		}
+		#light16 {
+			-webkit-transform: rotate(98.4deg);
+			-moz-transform: rotate(98.4deg);
+			-ms-transform: rotate(98.4deg);
+			-o-transform: rotate(98.4deg);
+			transform: rotate(98.4deg);
+		}
+		#light19 {
+			-webkit-transform: rotate(145.4deg);
+			-moz-transform: rotate(145.4deg);
+			-ms-transform: rotate(145.4deg);
+			-o-transform: rotate(145.4deg);
+			transform: rotate(145.4deg);
+		}
+		#light13 {
+			-webkit-transform: rotate(192deg);
+			-moz-transform: rotate(192deg);
+			-ms-transform: rotate(192deg);
+			-o-transform: rotate(192deg);
+			transform: rotate(192deg);
+		}
+		</style>
+		<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>
+		<script type="text/javascript" charset="utf-8">
+		var output;
+		var socket;
+		
+		var pins = {
+			 2: {state: false, type: 'button'},
+			 3: {state: false, type: 'button'},
+			 4: {state: false, type: 'button'},
+			 8: {state: false, type: 'button'},
+			10: {state: false, type: 'smdled'},
+			12: {state: false, type: 'smdled'},
+			14: {state: false, type: 'smdled'},
+			15: {state: false, type: 'smdled'},
+			17: {state: false, type: 'smdled'},
+			18: {state: false, type: 'smdled'},
+			21: {state: false, type: 'smdled'},
+			24: {state: false, type: 'smdled'},
+			26: {state: false, type: 'smdled'},
+			19: {state: false, type: 'led'},
+			16: {state: false, type: 'led'},
+			13: {state: false, type: 'led'}
+		}
+
+		var intID = undefined;
+		var connected = false;
+		
+		window.onload = function () {
+			output = document.getElementById('output');
+			
+			for (elem in pins) {
+				if (pins[elem].type === 'button') {
+					pins[elem].dom = document.getElementById('button'+elem);
+					console.log('button'+elem, pins[elem]);
+				} else {
+					pins[elem].dom = document.getElementById('light'+elem);
+					console.log('light'+elem, pins[elem]);
+				}				
+			}
+			
+			socket = io.connect('ws://' + document.domain + ':' + location.port);
+			socket.on('connect', function() {
+				output.innerHTML = 'Подключён';
+				connected = true;
+				
+				setTimeout(function() {
+					if (connected) {
+						output.innerHTML = '&nbsp;';
+					}					
+				}, 3000);
+				intID = setInterval(function() {
+					socket.emit('isPressed', {'button': 'all'});
+				}, 100);
+			});
+			socket.on('disconnect', function() {
+				output.innerHTML = 'Потерялось соединение';
+				connected = false;
+				if (intID) {
+					intID = clearInterval(intID);
+				}				
+			});
+			socket.on('button', function(btns) {
+				var str = '';
+				if (typeof(btns) === 'string') {
+					if (btns === 'released') {
+						pins[2].dom.className = 'button';
+					} else {
+						pins[2].dom.className = 'button activeButton';
+						console.log('button activeButton');
+					}
+				} else {
+					for (btn in btns) {
+						if (btns[btn]) {
+							pins[btn].dom.className = 'button';
+						} else {
+							pins[btn].dom.className = 'button activeButton';
+						}
+					}
+				}
+			});
+		//});
+		}
+		
+		var toggle = function(id) {
+			if (pins[id]) {
+				var type = pins[id].type;
+				if (type == 'led' || type == 'smdled') {
+					pins[id].state = !(pins[id].state);
+					socket.emit('toggle', {id: id, state: pins[id].state}, function() {
+						if (pins[id].state) {
+							if (type == 'led') pins[id].dom.className = 'light activeLight';
+							if (type == 'smdled') pins[id].dom.className = 'drop activeDrop';
+						} else {
+							if (type == 'led') pins[id].dom.className = 'light';
+							if (type == 'smdled') pins[id].dom.className = 'drop';
+						}
+					});
+				}
+			}
+		}
+		</script>
+	</head>
+	<body>
+		<div class="head">
+			<h1>Обратная связь</h1>
+		</div>
+		<div class="content">
+			<div class="cloud">
+				<div id="output">&nbsp;</div>
+				<div class="drop" id="light21" style="left: 150px; top: 336px;" onclick="toggle(21)"></div>
+				<div class="drop" id="light12" style="left: 297px; top: 354px;" onclick="toggle(12)"></div>
+				<div class="drop" id="light10" style="left: 423px; top: 320px;" onclick="toggle(10)"></div>
+				<div class="drop" id="light17" style="left: 571px; top: 348px;" onclick="toggle(17)"></div>
+				<div class="drop" id="light14" style="left: 687px; top: 335px;" onclick="toggle(14)"></div>
+				<div class="drop" id="light26" style="left: 259px; top: 237px;" onclick="toggle(26)"></div>
+				<div class="drop" id="light24" style="left: 451px; top: 224px;" onclick="toggle(24)"></div>
+				<div class="drop" id="light15" style="left: 621px; top: 246px;" onclick="toggle(15)"></div>
+				<div class="drop" id="light18" style="left: 534px; top: 144px;" onclick="toggle(18)"></div>
+				<div class="light" id="light16" style="left: 73px; top: 129px;" onclick="toggle(16)"></div>
+				<div class="light" id="light19" style="left: 138px; top: 24px;" onclick="toggle(19)"></div>
+				<div class="light" id="light13" style="left: 258px; top: 1px;" onclick="toggle(13)"></div>
+				<div class="button" id="button2" style="left: 857px; top: 356px;"></div>
+				<div class="button" id="button3" style="left: 635px; top: 121px;"></div>
+				<div class="button" id="button4" style="left: 545px; top: 53px;"></div>
+				<div class="button" id="button8" style="left: 425px; top: 53px;"></div>
+			</div>
+		</div>
+	</body>
+</head>
