@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<head>
+	<meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+	<link rel="icon" type="image/png" />
+	<script type="text/javascript" src="jquery-1.8.1.min.js"></script>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+	<link rel="stylesheet" href="style.css" />
+	<title>Raspberry TV Control</title>
+	<script type="text/javascript">	
+		var navigationBase = '/path/';
+		var playBase = '/play/';
+		var playlistVisible = false;
+		
+		function bindPlaylist() {
+			$('#playlist').click(function(event) {
+				console.log('#playlist click');
+				playlistVisible = !playlistVisible;
+				if (playlistVisible) {
+					$('#navigation').css('display', 'block');
+					$('#container').css('display', 'none');
+					$('#playlist').text('Пульт');
+				} else {
+					$('#container').css('display', 'block');
+					$('#navigation').css('display', 'none');
+					$('#playlist').text('Плейлист');
+				}
+				return false;
+			});
+		}
+		
+		function bindNavigators() {
+			$('button.navigator').click(function(event) {
+				navigate($(this).data('relative'));
+				return false;
+			});
+		}
+		
+		function bindPlayers() {
+			$('button.player').click(function() {
+				// $(this).css('opacity', 0.1);
+				$.ajax({
+					url: playBase + $(this).data('relative'),
+					type: "get",
+					dataType: "json",
+					success: function(data) {
+						output(this.url, data[0].message);
+					}
+				});
+				return false;
+			});
+		}
+		
+		function navigate(relativePath) {
+			$('#navigation').data('relative', relativePath);
+			
+			$.ajax({
+				url: navigationBase + relativePath,
+				type: "get",
+				dataType: "json",
+				success: function(data) {
+					output(this.url, 'path list');
+					$('#navigation').empty();
+					navigables = [];
+					jQuery.each(data, function(index) {	
+						var $newItem = $("<button id=\""+index+"\" class=\"player\" data-relative=\""+this.path+"\">"+this.name+"</button>");
+						$('#navigation').append($newItem);
+					});
+					
+					bindNavigators();
+					bindPlayers();
+				}
+			});
+		}
+	
+		$(document).ready(function() {
+			$('#output').ajaxError(function(event, request, settings, exception) {
+				output(settings.url, exception);
+			});
+
+			navigate('');
+			$('#navigation').data('relative', '');
+			bindPlaylist();
+			
+			$('button.control').click(function() {
+				$.ajax({
+					url: '/'+this.id,
+					type: "get",
+					dataType: "json",
+					success: function(data) {
+						output(this.url, data[0].message);
+					}
+				});
+				return false;
+			});
+		});
+		
+		$(document).keyup(function(event) {
+			var key = (event.keyCode ? event.keyCode : event.which);
+			switch(key)
+			{
+				case 87: // 38= up arrow, 87= w
+					$('#seekfl').trigger('click');
+					break;
+				case 83: // 40=down arrow, 83= s
+					$('#seekbl').trigger('click');
+					break;
+				case 65: // 37=left arrow, 65=a
+					$('#seekb').trigger('click');
+					break;
+				case 68: // 39=right arrow, 68=d
+					$('#seekf').trigger('click');
+					break;
+				case 70: // spacebar = 32, f = 70
+					$('#pause').trigger('click');
+					break;
+				case 27: // escape
+					$('#stop').trigger('click');
+					break;
+				case 107: // (numpad) +
+					$('#volumeup').trigger('click');
+					break;
+				case 109: // numpad -
+					$('#volumedown').trigger('click');
+					break;
+				case 75: // k
+					$('#languageup').trigger('click');
+					break;
+				case 74: // j
+					$('#languagedown').trigger('click');
+					break;
+				case 77: // m
+					$('#subtitleup').trigger('click');
+					break;
+				case 78: // n
+					$('#subtitledown').trigger('click');
+					break;
+				case 84: // t
+					$('#togglesubs').trigger('click');
+					break;
+			}
+		});
+	</script>
+</head>
+<body>
+	<div class="container">
+		<button class="playlist" id="playlist">
+			Плейлист
+		</button>
+	</div>
+	<div id="navigation" class="container">
+		<div style="margin: 1%">Здесь появится список фильмов, хранящихся в папке под ярлыком /media</div>
+	</div>
+	<div id="container" class="container">
+		<div class="controls">
+			<button class="control width2" id="languagedown">
+					<div class="number">j</div>
+					<div class="controlsymbol">L−</div>
+			</button>
+			<button class="control width2" id="languageup">
+					<div class="number">k</div>
+					<div class="controlsymbol">L+</div>
+			</button>
+		</div>
+		<div class="controls">
+			<button class="control width3" id="subtitledown">
+					<div class="number">n</div>
+					<div class="controlsymbol">C−</div>
+			</button>
+			<button class="control width3" id="togglesubs">
+					<div class="number">t</div>
+					<div class="controlsymbol">CC</div>
+			</button>
+			<button class="control width3" id="subtitleup">
+					<div class="number">m</div>
+					<div class="controlsymbol">C+</div>
+			</button>
+		</div>
+		<div class="controls">
+			<button class="control" id="seekbl">
+					<div class="number">s</div>
+					<div class="controlsymbol fa fa-backward"></div>
+			</button>
+			<button class="control" id="seekb">
+					<div class="number">a</div>
+					<div class="controlsymbol fa fa-step-backward"></div>
+			</button>
+			<button class="control" id="seekf">
+					<div class="number">d</div>
+					<div class="controlsymbol fa fa-step-forward"></div>
+			</button>
+			<button class="control" id="seekfl">
+					<div class="number">w</div>
+					<div class="controlsymbol fa fa-forward"></div>
+			</button>
+		</div>
+		<div class="controls">
+			<button class="control width2" id="pause">
+					<div class="number">f</div>
+					<div class="controlsymbol fa">&#xf04b; &#xf04c;</div>
+			</button>
+			<button class="control width2" id="stop">		
+					<div class="number">esc</div>
+					<div class="controlsymbol fa fa-stop"></div>
+			</button>
+		</div>
+		<div class="controls">
+			<button class="control width2" id="volumedown">
+					<div class="number">num −</div>
+					<div class="controlsymbol fa fa-volume-down"></div>
+			</button>
+			<button class="control width2" id="volumeup">
+					<div class="number">num +</div>
+					<div class="controlsymbol fa fa-volume-up"></div>
+			</button>
+		</div>
+	</div>
+</body>
