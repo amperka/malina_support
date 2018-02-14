@@ -44,7 +44,7 @@
 					type: "get",
 					dataType: "json",
 					success: function(data) {
-						output(this.url, data[0].message);
+						// output(this.url, data[0].message);
 					}
 				});
 				return false;
@@ -59,7 +59,7 @@
 				type: "get",
 				dataType: "json",
 				success: function(data) {
-					output(this.url, 'path list');
+					// output(this.url, 'path list');
 					$('#navigation').empty();
 					navigables = [];
 					jQuery.each(data, function(index) {	
@@ -74,9 +74,9 @@
 		}
 	
 		$(document).ready(function() {
-			$('#output').ajaxError(function(event, request, settings, exception) {
-				output(settings.url, exception);
-			});
+			// $('#output').ajaxError(function(event, request, settings, exception) {
+			// 	output(settings.url, exception);
+			// });
 
 			navigate('');
 			$('#navigation').data('relative', '');
@@ -88,7 +88,7 @@
 					type: "get",
 					dataType: "json",
 					success: function(data) {
-						output(this.url, data[0].message);
+						// output(this.url, data[0].message);
 					}
 				});
 				return false;
