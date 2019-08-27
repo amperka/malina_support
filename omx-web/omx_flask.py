@@ -8,7 +8,6 @@ import time
 import subprocess # Будет запускать omxplayer и управять им вместо нас
 import re # Регулярные выражения — гибкие, но сложные конструкции для поиска в тексте по шаблону
 import os, os.path # Помогут в работе с файлами и папками на диске
-import pipes # Создаст именованный канал управления плеером, будет имитировать нажатие клавиш
 import string # Поможет в небольших манипуляциях с именами файлов
 
 app = Flask(__name__)
@@ -21,13 +20,11 @@ PLAYABLE_TYPES = ['.264','.avi','.bin','.divx','.f4v','.h264','.m4e','.m4v','.m4
 MEDIA_RDIR = app.root_path+'/'+'media/'
 PAGE_FOLDER = app.root_path+'/'+'omxfront/'
 PAGE_NAME = 'interface.htm'
-OMXIN_FILE = app.root_path+'/'+'omxin'
-
-# Создаём именованный канал, если его ещё нет
-if (os.path.exists(OMXIN_FILE) == False):
-    os.mkfifo(OMXIN_FILE)
 
 play_list = []
+
+# Переменная, в которой будет храниться процесс omxplayer
+omxproc = None
 
 # Словарь команд управления плеером
 command_send={
@@ -60,7 +57,6 @@ command_send={
 
 @app.route('/')
 def Interface():
-	# print('Interface')
 	return send_file(PAGE_FOLDER+PAGE_NAME)
 
 @app.route('/play/<file>')
@@ -81,7 +77,6 @@ def Playlist(item):
 @app.route('/path/', defaults={'path': ''})
 @app.route('/path/<path>')
 def Path(path):
-	# print('Path')
 	itemlist = []
 	if path.startswith('..'):
 		path = ''
@@ -111,7 +106,6 @@ def Path(path):
 
 @app.route('/<name>')
 def other(name):
-	# print('other')
 	if not name == '':
 		if name in command_send:
 			omx_send(command_send[name])
@@ -124,25 +118,25 @@ def other(name):
 	return '[{\"message\":\"ERROR!!!\"}]'
 
 def omx_send(data):
-    subprocess.Popen('echo -n '+data+' >'+re.escape(OMXIN_FILE),shell=True)
-    return 1
+	global omxproc
+	omxproc.stdin.write(data.encode("utf-8"))
+
 
 # Включаем воспроизведеине файла
-def omx_play(file):
-    # omx_send('q')
-    # time.sleep(0.5) #Possibly unneeded - crashing fixed by other means.
+def omx_play(filename):
+	global omxproc
 	# Закрываем все плееры
-    subprocess.Popen('killall omxplayer.bin',stdout=subprocess.PIPE,shell=True)
-	# Очищаем уменованный канал от мусора
-    subprocess.Popen('clear',stdout=subprocess.PIPE,shell=True)
+	subprocess.Popen('killall omxplayer.bin',stdout=subprocess.PIPE,shell=True)
+	# Полный путь к видеофайлу
+	filepath = os.path.join(MEDIA_RDIR, filename)
 	# Запускаем плеер
 	# Флаг -r масштабируем изображение по экрану
 	# -o local — выводит звук на разъём Jack 3.5
 	# -o hdmi — выводит звук на динамики телевизора (если они есть)
 	# -o both — выводит звук и на Jack 3.5, и на телевизор
-    subprocess.Popen('omxplayer -r -o local '+os.path.join(MEDIA_RDIR,re.escape(file))+' <'+re.escape(OMXIN_FILE),shell=True)
-    omx_send('z')
-    return 1
+	omxproc = subprocess.Popen("omxplayer -o hdmi " + filepath, stdin=subprocess.PIPE, bufsize=0, shell=True)
+	omx_send('')
+
 
 if __name__ == '__main__':
     app.run(port=8080, host='0.0.0.0', threaded=True)
