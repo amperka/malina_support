@@ -134,7 +134,7 @@ def Path(path):
     itemlist = []
     if path.startswith(".."):
         path = ""
-    # Проводим манипуляции с файлами и папка в системе: выделяем имена, расширения из полного пути
+    # Проводим манипуляции с файлами и папками в системе: выделяем имена, расширения из полного пути
     for item in os.listdir(os.path.join(MEDIA_RDIR, path)):
         if os.path.isfile(os.path.join(MEDIA_RDIR, path, item)):
             fname = os.path.splitext(item)[0]
@@ -211,7 +211,7 @@ def omx_send(data):
             omxproc = None
 
 
-# Включаем воспроизведеине файла
+# Включаем воспроизведение файла
 def omx_play(filename):
     global omxproc
     # Закрываем все плееры
