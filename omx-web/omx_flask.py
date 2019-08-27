@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 # Импортируем Flask для web-сервера
@@ -59,7 +59,7 @@ PLAYABLE_TYPES = [
     ".mkv",
 ]
 
-# Склеим полные пути к файлам: ярлыку на папку с фильмами, папке с интерфейсом и именованному каналу
+# Склеим полные пути к файлам: ярлыку на папку с фильмами, папке с интерфейсом
 MEDIA_RDIR = app.root_path + "/" + "media/"
 PAGE_FOLDER = app.root_path + "/" + "omxfront/"
 PAGE_NAME = "interface.htm"
@@ -215,11 +215,10 @@ def omx_send(data):
 def omx_play(filename):
     global omxproc
     # Закрываем все плееры
-    subprocess.Popen("killall omxplayer.bin", stdout=subprocess.PIPE, shell=True)
+    subprocess.Popen("killall omxplayer.bin", stderr=subprocess.DEVNULL, shell=True)
     # Полный путь к видеофайлу
     filepath = os.path.join(MEDIA_RDIR, filename)
     # Запускаем плеер
-    # Флаг -r масштабируем изображение по экрану
     # -o local — выводит звук на разъём Jack 3.5
     # -o hdmi — выводит звук на динамики телевизора (если они есть)
     # -o both — выводит звук и на Jack 3.5, и на телевизор
