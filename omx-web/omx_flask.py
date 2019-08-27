@@ -119,7 +119,26 @@ def other(name):
 
 def omx_send(data):
 	global omxproc
-	omxproc.stdin.write(data.encode("utf-8"))
+	if omxproc is not None:
+		# Если omxplayer запущен, можно отправлять команды
+		if omxproc.poll() is None:
+			try:
+				omxproc.stdin.write(data.encode("utf-8"))
+				# Если поступила команда на выключение
+				if data == "q":
+					# Дадим плееру 5 секунд на отключение.
+					omxproc.wait(timeout=5)
+					omxproc = None
+			# Если плеер не завершает работу, выключим принудительно
+			except subprocess.TimeoutExpired:
+				print("Closing timeout is over. The process will be terminated forcibly.")
+				subprocess.Popen("killall omxplayer.bin", shell=True)
+				omxproc = None
+			# Если возникнет какая-то другая ошибка, выведем информацию о ней
+			except OSError as err:
+				print("Error: ", err)
+		else:
+			omxproc = None
 
 
 # Включаем воспроизведеине файла
